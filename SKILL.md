@@ -1,72 +1,67 @@
 ---
 name: ccb-semantic-exec
 description: |
-  CCB-style semantic command classification for bash commands.
-  Classifies commands as: search | read | list | write | destructive | silent | neutral
-  Use when: enhancing exec tool security, categorizing command output for display,
-  or building permission systems. Triggers: "classify command", "is this read-only",
-  "dangerous command", "exec security", "command category".
+  Semantic command classification / 命令语义分类器
+  Classifies bash commands as: search | read | list | write | destructive | silent | neutral
+  用途：自动识别命令类型，用于 exec 工具安全增强、权限系统、输出显示优化。
+  触发词 / Triggers: "classify command", "is this read-only", "dangerous command", "命令安全吗"
 ---
 
-# Semantic Command Classifier
+# Semantic Command Classifier / 命令语义分类器
 
-Inspired by Claude Code Best's `commandSemantics.ts`.
+CCB-style semantic command classification for bash commands.
+为 bash 命令赋予语义标签，用于安全策略和 UI 显示。
 
-## Command Categories
+## 命令分类 / Command Categories
 
-| Category | Examples | Behavior |
-|----------|----------|----------|
-| `search` | grep, rg, ag, find, locate | Collapsible in UI |
-| `read` | cat, head, tail, less, wc | Collapsible in UI |
-| `list` | ls, tree, du | Collapsible in UI |
-| `write` | echo, tee, sed -i | May need confirmation |
-| `destructive` | rm, dd, mkfs | Requires extra confirmation |
-| `silent` | cd, export, chmod, mv, cp | Success = no output |
-| `neutral` | echo, printf, true, false | No semantic weight |
+| 分类 Category | 示例 Examples | 行为 Behavior |
+|---------------|----------------|---------------|
+| `search` | grep, rg, ag, find | UI 可折叠 / Collapsible in UI |
+| `read` | cat, head, tail, less, wc | UI 可折叠 / Collapsible in UI |
+| `list` | ls, tree, du | UI 可折叠 / Collapsible in UI |
+| `write` | echo, tee, sed -i | 可能需确认 / May need confirmation |
+| `destructive` | rm, dd, mkfs | 需额外确认 / Requires extra confirmation |
+| `silent` | cd, export, chmod, mv, cp | 成功=无输出 / Success = no output |
+| `neutral` | echo, printf, true, false | 无语义权重 / No semantic weight |
 
-## Usage
+## 使用方法 / Usage
 
 ```bash
-# Classify a command
+# 分类命令 / Classify a command
 node classify.ts "grep -r 'TODO' src/"
 # Output: { type: "search", isRead: true, isSearch: true, ... }
 
-# Check if destructive
+# 检查是否危险 / Check if destructive
 node is-destructive.ts "rm -rf /"
 # Output: true
 
-# Check if safe to auto-run
+# 检查是否安全可自动运行 / Check if safe to auto-run
 node is-safe.ts "git status"
 # Output: true
 ```
 
-## API
+## API / 编程接口
 
 ```typescript
 import { classify, isSearch, isRead, isDestructive, isSilent, isWrite } from './classify.js'
 
 const result = classify('grep -r "TODO" src/')
-// result: { type: 'search', isSearch: true, isRead: true, isList: false, isWrite: false, isDestructive: false, isSilent: false }
+// result: { type: 'search', isSearch: true, isRead: true, ... }
 ```
 
-## Security Model
+## 安全策略 / Security Policy
 
 ```
 Command → classify() → category → policy
-                              ├─ destructive → "CONFIRM_REQUIRED"
-                              ├─ write → "WARN_UNLESS_READONLY"
-                              ├─ search/read/list → "AUTO_ALLOW"
-                              └─ silent/neutral → "SILENT_ALLOW"
+                              ├─ destructive → "CONFIRM_REQUIRED" / 需确认
+                              ├─ write → "WARN_UNLESS_READONLY" / 警告
+                              ├─ search/read/list → "AUTO_ALLOW" / 自动允许
+                              └─ silent/neutral → "SILENT_ALLOW" / 静默允许
 ```
 
-## Integration with exec
+## 应用场景 / Use Cases
 
-Wrap any exec call:
-```bash
-RESULT=$(node is-safe.ts "git push")
-if [ "$RESULT" = "true" ]; then
-  # safe to run
-else
-  echo "WARNING: potentially unsafe command"
-fi
-```
+- **exec 工具安全增强** / Enhance exec tool security
+- **命令输出显示优化** / Optimize command output display
+- **权限系统构建** / Build permission systems
+- **危险命令拦截** / Block dangerous commands
