@@ -1,0 +1,10 @@
+{
+  "name": "ccb-semantic-exec",
+  "version": "1.0.0",
+  "description": "Semantic command classification - categorize exec commands as read/write/destructive",
+  "scripts": {
+    "start": "node scripts/main.*"
+  },
+  "keywords": ["openclaw", "ccb", "semantic-exec"],
+  "license": "MIT"
+}
